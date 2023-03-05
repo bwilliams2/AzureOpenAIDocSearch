@@ -1,0 +1,13 @@
+[project]
+name = "doc_utils"
+description = "Utility functions for OpenAI search app."
+version = "0.0.1"
+
+dependencies = [
+    "sqlalchemy>=2.0.0",
+    "psycopg2-binary"
+]
+
+[build-system]
+build-backend = "flit_core.buildapi"
+requires = ["flit_core >=3.8.0,<4"]
