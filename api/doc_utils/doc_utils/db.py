@@ -13,15 +13,12 @@ def get_engine():
     db_password = os.getenv("POSTGRES_PASSWORD")
     db_hostname = os.getenv("DATABASE_HOSTNAME")
     database_name = os.getenv("DATABASE_NAME")
-    return create_engine(f'postgresql+psycopg2://{db_user}:{db_password}@{db_hostname}/{database_name}')
+    return create_engine(
+        f"postgresql+psycopg2://{db_user}:{db_password}@{db_hostname}/{database_name}"
+    )
 
 
-def insert_document(
-    extracted_text: TextExtraction,
-    blob_path: str,
-    file_hash: str
-):
-
+def insert_document(extracted_text: TextExtraction, blob_path: str, file_hash: str):
     engine = get_engine()
     session = Session(engine)
     try:
@@ -33,23 +30,20 @@ def insert_document(
             authors=extracted_text.authors,
             keywords=extracted_text.keywords,
             page_summaries=extracted_text.intermediate_summaries,
-            summary=extracted_text.summary
+            summary=extracted_text.summary,
         )
         session.add(doc)
         session.commit()
-        
+
         doc_embedding = Embedding(
-            doc_id=doc.id,
-            embedding=json.dumps(get_embedding(doc.summary))
+            doc_id=doc.id, embedding=json.dumps(get_embedding(doc.summary))
         )
         embeddings = [doc_embedding]
 
         if len(extracted_text.keywords) > 0:
-            text=" ".join(extracted_text.keywords)
+            text = " ".join(extracted_text.keywords)
             keyword_snippet = Snippet(
-                doc_id=doc.id,
-                snippet_type="keywords",
-                text=text
+                doc_id=doc.id, snippet_type="keywords", full_text=text
             )
             session.add(keyword_snippet)
             session.commit()
@@ -58,16 +52,14 @@ def insert_document(
                 Embedding(
                     doc_id=doc.id,
                     snippet_id=keyword_snippet.id,
-                    embedding=json.dumps(get_embedding(text))
+                    embedding=json.dumps(get_embedding(text)),
                 )
             )
 
         if len(extracted_text.authors) > 0:
-            text=" ".join(extracted_text.authors)
+            text = " ".join(extracted_text.authors)
             author_snippet = Snippet(
-                doc_id=doc.id,
-                snippet_type="authors",
-                text=text
+                doc_id=doc.id, snippet_type="authors", full_text=text
             )
             session.add(author_snippet)
             session.commit()
@@ -76,15 +68,13 @@ def insert_document(
                 Embedding(
                     doc_id=doc.id,
                     snippet_id=author_snippet.id,
-                    embedding=json.dumps(get_embedding(text))
+                    embedding=json.dumps(get_embedding(text)),
                 )
             )
 
         for summary in extracted_text.intermediate_summaries:
             snippet = Snippet(
-                doc_id=doc.id,
-                snippet_type="intermediate_summary",
-                text=summary
+                doc_id=doc.id, snippet_type="intermediate_summary", full_text=summary
             )
             session.add(snippet)
             session.commit()
@@ -92,7 +82,7 @@ def insert_document(
             snippet_embedding = Embedding(
                 doc_id=doc.id,
                 snippet_id=snippet.id,
-                embedding=json.dumps(get_embedding(snippet.text))
+                embedding=json.dumps(get_embedding(summary)),
             )
             embeddings.append(snippet_embedding)
 
@@ -101,6 +91,3 @@ def insert_document(
 
     finally:
         session.close()
-
-    
-

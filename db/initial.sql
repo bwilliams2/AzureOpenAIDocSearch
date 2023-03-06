@@ -1,8 +1,6 @@
-
 CREATE DATABASE embeddingsearch;
 \c embeddingsearch
 
-CREATE EXTENSION dblink;
 CREATE EXTENSION vector;
 
 CREATE TABLE IF NOT EXISTS embeddings (

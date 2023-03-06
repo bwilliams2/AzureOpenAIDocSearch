@@ -9,3 +9,4 @@ COPY requirements.txt /
 RUN pip install -r /requirements.txt
 
 COPY . /home/site/wwwroot
+RUN cd /home/site/wwwroot/doc_utils && pip install -e .

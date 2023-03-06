@@ -15,9 +15,12 @@ def get_embedding(text, model="text-embedding-ada-002"):
     text = text.replace("\n", " ")
     return openai.Embedding.create(input=[text], model=model)["data"][0]["embedding"]
 
+
 class TextExtraction(object):
-     
-    def __init__(self, text: str):
+    def __init__(
+        self,
+        text: str,
+    ):
         self._text = text
         self._split_document()
         self._authors = None
@@ -31,7 +34,7 @@ class TextExtraction(object):
         text_splitter = CharacterTextSplitter(separator="\n")
         texts = text_splitter.split_text(self._text)
         self._text_splits = [LLMDocument(page_content=t) for t in texts]
-    
+
     @property
     def full_text(self):
         return self._text
@@ -39,7 +42,7 @@ class TextExtraction(object):
     @property
     def text_splits(self):
         return [split.page_content for split in self._text_splits]
-    
+
     @staticmethod
     def _author_chain():
         llm = OpenAI(temperature=0)
@@ -48,7 +51,9 @@ class TextExtraction(object):
             "return 'WARNING: No authors identified'. Remove all numbers and special characters "
             "from response.\n\n{text}\n\nAUTHORS:"
         )
-        author_prompt = PromptTemplate(input_variables=["text"], template=author_template)
+        author_prompt = PromptTemplate(
+            input_variables=["text"], template=author_template
+        )
         return LLMChain(llm=llm, prompt=author_prompt)
 
     @property
@@ -73,9 +78,10 @@ class TextExtraction(object):
             "return 'WARNING: No keywords identified'."
             "\n\n{text}\n\nKeywords:"
         )
-        keyword_prompt = PromptTemplate(input_variables=["text"], template=keyword_template)
+        keyword_prompt = PromptTemplate(
+            input_variables=["text"], template=keyword_template
+        )
         return LLMChain(llm=llm, prompt=keyword_prompt)
-
 
     @property
     def keywords(self):
@@ -86,9 +92,10 @@ class TextExtraction(object):
                 res = keyword_chain.run(text_doc.page_content)
                 if "WARNING" not in res:
                     keywords += [keyword.strip() for keyword in res.split(",")]
+                    break
             self._keywords = list(set(keywords))
         return self._keywords
-    
+
     @staticmethod
     def _title_chain():
         llm = OpenAI(temperature=0)
@@ -100,12 +107,11 @@ class TextExtraction(object):
         title_prompt = PromptTemplate(input_variables=["text"], template=title_template)
         return LLMChain(llm=llm, prompt=title_prompt)
 
-
     @property
     def title(self):
         if self._title is None:
             title_chain = self._title_chain()
-            title = "" 
+            title = ""
             for text_doc in self._text_splits:
                 res = title_chain.run(text_doc.page_content)
                 if "WARNING" not in res:
@@ -130,18 +136,22 @@ class TextExtraction(object):
             chain_type="map_reduce",
             return_intermediate_steps=True,
             map_prompt=PROMPT,
-            combine_prompt=PROMPT
+            combine_prompt=PROMPT,
         )
-        outputs = chain({"input_documents": self._text_splits}, return_only_outputs=True)
-        self._summary = outputs["output_text"]
-        self._intermediate_summaries = outputs["intermediate_steps"]
+        outputs = chain(
+            {"input_documents": self._text_splits}, return_only_outputs=True
+        )
+        self._summary = outputs["output_text"].strip()
+        self._intermediate_summaries = [
+            sum.strip() for sum in outputs["intermediate_steps"]
+        ]
 
     @property
     def intermediate_summaries(self):
         if self._intermediate_summaries is None:
             self._process_summary()
         return self._intermediate_summaries
-    
+
     @property
     def summary(self):
         if self._summary is None:

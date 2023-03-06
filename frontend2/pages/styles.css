@@ -1,0 +1,42 @@
+
+.chatbox {
+    min-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    background-color: gray;
+    row-gap: 10px;
+    padding: 8px;
+    border-radius: 10px;
+}
+
+.bubble {
+    border-radius: 10px;
+    max-width: 60%;
+    width: fit-content;
+}
+
+.bubble p {
+    padding: 8px;
+    margin: auto;
+} 
+
+
+.chatbox .bot {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.bot .bubble {
+    color: blue;
+    background-color: purple;
+}
+
+.chatbox .user {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.user .bubble {
+    color: green;
+    background-color: orange;
+}

@@ -35,7 +35,7 @@ class Snippet(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     doc_id: Mapped[int] = mapped_column(ForeignKey("documents.id"))
     snippet_type: Mapped[str] = mapped_column(Text)
-    text: Mapped[str] = mapped_column(Text)
+    full_text: Mapped[str] = mapped_column(Text)
 
     def __repr__(self) -> str:
         return f"Snippet(id={self.id!r}, doc_id={self.doc_id!r}, snippet_type={self.summary!r})"
