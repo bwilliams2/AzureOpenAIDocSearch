@@ -1,6 +1,11 @@
 import os
+from typing import Optional
+
+from pydantic import BaseModel
+from copy import deepcopy
 
 from langchain.llms import OpenAI
+from langchain.llms import OpenAIChat
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain import OpenAI
@@ -8,12 +13,60 @@ from langchain.prompts import PromptTemplate
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 from langchain.docstore.document import Document as LLMDocument
+from langchain.memory import ConversationBufferMemory
 import openai
 
 
 def get_embedding(text, model="text-embedding-ada-002"):
     text = text.replace("\n", " ")
     return openai.Embedding.create(input=[text], model=model)["data"][0]["embedding"]
+
+
+class Chat(BaseModel):
+    new_input: str
+    user_inputs: list[str]
+    bot_outputs: list[str]
+    doc_id: int
+    document: Optional[str] = None
+
+
+class DocumentChat(object):
+    def __init__(self, chat: Chat):
+        self._chat = chat
+        self._prompt_template = self._get_prompt()
+        self._chain = self._get_chain()
+
+    def _get_prompt(self):
+        try:
+            from .prompts import POSTDOCUMENT, PREDOCUMENT
+        except ImportError:
+            PREDOCUMENT = ""
+            POSTDOCUMENT = ""
+        return PREDOCUMENT + self._chat.document + POSTDOCUMENT
+
+    def _get_chain(self):
+        prompt = PromptTemplate(
+            input_variables=["history", "human_input"],
+            template=self._prompt_template,
+        )
+
+        memory = ConversationBufferMemory(human_prefix="User", ai_prefix="Assistant")
+        for user_input, bot_output in zip(
+            self._chat.user_inputs, self._chat.bot_outputs
+        ):
+            memory.chat_memory.add_user_message(user_input)
+            memory.chat_memory.add_ai_message(bot_output)
+
+        return LLMChain(
+            llm=OpenAI(temperature=0), prompt=prompt, verbose=True, memory=memory
+        )
+
+    def predict(self):
+        new_output = self._chain.run(human_input=self._chat.new_input)
+        updated_chat = deepcopy(self._chat)
+        updated_chat.user_inputs.append(self._chat.new_input)
+        updated_chat.bot_outputs.append(new_output)
+        return updated_chat
 
 
 class TextExtraction(object):

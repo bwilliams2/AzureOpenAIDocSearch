@@ -138,3 +138,6 @@ documents/
 # Env files
 .env
 dev.env
+
+# Protected files
+api/doc_utils/doc_utils/prompts.py

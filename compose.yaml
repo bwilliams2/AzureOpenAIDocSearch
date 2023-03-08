@@ -1,11 +1,14 @@
 services:
   # web:
-  #   build: .
+  #   build: ./frontend
   #   ports:
-  #     - "80:8081"
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
+  #     - "8888:8888"
+  #   volumes:
+  #     - ./frontend:/app
+  #   restart: always
+  #   # depends_on:
+  #   #   db:
+  #   #     condition: service_healthy
   #   command: ["python", "app.py"]
  
   db:
@@ -24,14 +27,14 @@ services:
     #   start_period: 15s
     #   retries: 10
   
-  functions:
-    build: ./api
-    ports:
-      - "8081:80"
-    volumes: 
-      - ./api:/home/site/wwwroot
-    env_file:
-      - ./dev.env
+  # functions:
+  #   build: ./api
+  #   ports:
+  #     - "8081:80"
+  #   volumes: 
+  #     - ./api:/home/site/wwwroot
+  #   env_file:
+  #     - ./dev.env
     # depends_on:
     #   db:
     #     condition: service_healthy

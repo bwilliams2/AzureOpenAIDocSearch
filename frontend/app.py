@@ -1,9 +1,21 @@
+import os
+
 import dash
 import dash_bootstrap_components as dbc
 from dotenv import load_dotenv
-from dash import Input, Output, dcc, html
+from dash import Input, Output, html, State, MATCH, dcc, ctx
+import requests
 
-load_dotenv("../dev.env")
+from dash.exceptions import PreventUpdate
+
+try:
+    # Attempt dev env load
+    load_dotenv("../dev.env")
+except:
+    pass
+
+API_URL = os.getenv("API_URL", "")
+API_KEY = os.getenv("API_KEY", "")
 
 app = dash.Dash(external_stylesheets=[dbc.themes.DARKLY], use_pages=True)
 
@@ -34,9 +46,6 @@ app.layout = html.Div(
             [
                 html.H2("Sidebar", className="display-4"),
                 html.Hr(),
-                html.P(
-                    "A simple sidebar layout with navigation links", className="lead"
-                ),
                 dbc.Nav(
                     [
                         dbc.NavLink(f"{page['name']}", href=page["relative_path"])
@@ -51,6 +60,7 @@ app.layout = html.Div(
         html.Div(dash.page_container, style=CONTENT_STYLE),
     ],
 )
+app.config.suppress_callback_exceptions = True
 
 
 if __name__ == "__main__":

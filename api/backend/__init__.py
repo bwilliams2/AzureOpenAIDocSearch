@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 from doc_utils.orm import Document, Embedding
 from doc_utils.db import get_engine
-from doc_utils.llm import get_embedding
+from doc_utils.llm import get_embedding, Chat, DocumentChat
 
 
 app = FastAPI()
@@ -68,6 +68,19 @@ async def embedding_search(
         )
         docs = [document_mapper(doc) for doc in results]
     return docs
+
+
+@app.post("/qna")
+async def submit_chat(chat: Chat) -> Chat:
+    engine = get_engine()
+    with Session(engine) as session:
+        doc = session.query(Document).filter(Document.id == chat.doc_id).first()
+    chat.document = doc.summary
+
+    chat_gen = DocumentChat(chat)
+    next_chat = chat_gen.predict()
+
+    return next_chat
 
 
 @app.post("/newdocument")
