@@ -31,7 +31,7 @@ def format_bot_response(text: str):
             html.Div(
                 [text],
                 style={"backgroundColor": "white", "color": "black", **bubble_styles},
-                class_name="bot"
+                class_name="bot",
             )
         ],
         justify="start",
@@ -44,7 +44,7 @@ def format_user_input(text: str):
             html.Div(
                 [text],
                 style={"backgroundColor": "blue", **bubble_styles},
-                class_name="user"
+                class_name="user",
             )
         ],
         justify="end",
@@ -132,15 +132,19 @@ def submit_chat(n_clicks, pathname, value, current_children):
     user_inputs = []
     bot_inputs = []
     for child in current_children:
-
+        div = child["props"]["children"][0]
+        if div["props"]["className"] == "user":
+            user_inputs.append(div["props"]["children"][0])
+        else:
+            bot_inputs.append(div["props"]["children"][0])
 
     document_id = int(pathname.split("/")[-1])
     data = json.dumps(
         {
             "doc_id": document_id,
             "new_input": value,
-            "user_inputs": [item["props"]["children"][0]["props"]["children"][0] for item in current_children]],
-            "bot_outputs": [],
+            "user_inputs": user_inputs,
+            "bot_outputs": bot_inputs,
         }
     )
 
